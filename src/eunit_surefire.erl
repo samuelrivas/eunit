@@ -461,3 +461,42 @@ is_legal(Char) when Char < 16#20 ->
     %% Only these are legal in the range 0x00..0x1F
     lists:member(Char, [9, 10, 13]);
 is_legal(_) -> true.
+
+-ifdef(TEST).
+
+-include_lib("xmerl/include/xmerl.hrl").
+
+valid_xml_test_() ->
+    TestDir = "/tmp/eunit-xml-test",
+    Report = report_file_name(TestDir, suite_name()),
+    {"Test that xmerl can parse the generated report",
+     setup,
+     fun() ->
+             ok = file:make_dir(TestDir),
+             write_reports([test_testsuite()], TestDir)
+     end,
+     fun(_) ->
+             ok = file:delete(Report),
+             ok = file:del_dir(TestDir)
+     end,
+     ?_assertMatch({#xmlElement{}, []}, xmerl_scan:file(Report))}.
+
+test_testsuite() ->
+    #testsuite{name = suite_name(),
+               testcases = [test_testcase()]}.
+
+%% Assuming a test that outputs any possible byte, generated XML must still be
+%% valid
+test_testcase() ->
+    #testcase{name = "Dummy test case",
+              description = "Dummy description",
+              result = {failed, {error, ouch}},
+              time = 1,
+              output = list_to_binary(lists:seq(0, 255))}.
+
+suite_name() -> "Dummy test suite".
+
+report_file_name(Dir, SuiteName) ->
+    filename:join(Dir, suite_file_name(SuiteName)).
+
+-endif.
