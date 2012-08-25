@@ -260,7 +260,7 @@ write_reports(TestSuites, XmlDir) ->
                   TestSuites).
 
 write_report(#testsuite{name = Name} = TestSuite, XmlDir) ->
-    Filename = filename:join(XmlDir, lists:flatten(["TEST-", escape_suitename(Name)], ".xml")),
+    Filename = filename:join(XmlDir, suite_file_name(Name)),
     case file:open(Filename, [write,{encoding,utf8}]) of
         {ok, FileDescriptor} ->
             try
@@ -270,6 +270,9 @@ write_report(#testsuite{name = Name} = TestSuite, XmlDir) ->
             end;
         {error, _Reason} = Error -> throw(Error)
     end.
+
+suite_file_name(Name) ->
+    lists:flatten(["TEST-", escape_suitename(Name)], ".xml").
 
 %% ----------------------------------------------------------------------------
 %% Actually write a report.
